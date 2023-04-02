@@ -1,9 +1,5 @@
-import openai
-import os
-import telebot
+import os, json, time, telebot, openai, pandas as pd
 from telebot import types
-import pandas as pd
-import json
 
 keys = json.load(open('keys.txt'))
 
@@ -37,8 +33,10 @@ print('bot listo!',end='\n\n\n')
 # /rol -> cambia rol de chatgpt
 
 def error(msg=''):
-    print(msg)
+    print(msg, end='\n\n')
     bot.stop_bot()
+    save_content()
+    time.sleep(3)
 
 
 def predict(chat_log):
@@ -60,7 +58,7 @@ def save_content():
     global file_in_use
 
     if not os.path.isdir(path_history):
-        os.path.mkdir(path_history)
+        os.mkdir(path_history)
 
     try:
         print(f'Se entró en la función {save_content.__name__}():')
@@ -186,8 +184,9 @@ def change_rol(message):
 @bot.message_handler(content_types=['text'])
 def reply_handler(message):
     if message.text in ['q', 'quit', 'Q', 'Quit', 'exit', 'Exit']:
-        print('Deteniendo el bot...')
+        print('Deteniendo el bot...\n\n')
         bot.stop_bot()
+        save_content()
     else:
         chat_log.append({"role": "user", "content": message.text})
         bot.reply_to(message, 'cargando ···')
@@ -223,16 +222,3 @@ def callback_query(call):
 
 
 bot.polling()
-
-
-## Para crear un nuevo entorno virtual:
-# mkvirtualenv telebot-chatgpt
-
-## Para activar el entorno vitual existente:
-# workon telebot-chatgpt
-
-## Correr el script
-# python chatgpt_on_telegram.py
-
-## Para desactivar el entorno virtual:
-# deactivate
