@@ -21,9 +21,7 @@ rols = {
 }
 
 
-
-TELEGRAM_TOKEN = keys["TELEGRAM_TOKEN"]
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+bot = telebot.TeleBot(keys["TELEGRAM_TOKEN"])
 print('bot listo!',end='\n\n\n')
 
 # comandos:
