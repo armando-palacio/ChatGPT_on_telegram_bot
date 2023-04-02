@@ -1,2 +1,2 @@
-{"OPENAI_KEY" : "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", "TELEGRAM_TOKEN": "2028530915:AAGcl3N6ZETye0gDZ9FCgYLNfQ4HwH8i2KQ"}
+{"OPENAI_KEY" : "your_openai_key", "TELEGRAM_TOKEN": "your_telegram_token"}
 
