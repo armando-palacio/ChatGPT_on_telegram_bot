@@ -38,11 +38,11 @@ rols = {
 #--------------------------------------------------------------------------------------------------------------
 # configuración de la API de OpenAI y del bot de Telegram
 
-# openai.api_key = keys["OPENAI_KEY"]
-# bot = telebot.TeleBot(keys["TELEGRAM_TOKEN"])
+openai.api_key = keys["OPENAI_KEY"]
+bot = telebot.TeleBot(keys["TELEGRAM_TOKEN"])
 
-openai.api_key = os.getenv("OPENAI_KEY")
-bot = telebot.TeleBot(os.getenv("TELEGRAM_TOKEN"))
+# openai.api_key = os.getenv("OPENAI_KEY")
+# bot = telebot.TeleBot(os.getenv("TELEGRAM_TOKEN"))
 
 print('bot listo!',end='\n\n\n')
 

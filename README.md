@@ -13,8 +13,20 @@
    ![image](https://user-images.githubusercontent.com/66741745/229366334-f2acf173-969b-475e-82ca-61e4d984ac3c.png)
 3. Crear una nueva API presionando el botón `Create new secret keys`. Copiala y guardala en un lugar seguro, ya que se necesitará para acceder al modelo de generación `gpt-3.5-turbo`.
 
-## ¿Cómo hacer funcionar el código?
+## ¿Cómo hacer funcionar el Bot?
 
-1. Dentro de tu carpeta de trabajo abre una nueva terminal y ejecuta el comando `git clone https://github.com/armando-palacio/ChatGPT_on_telegram_bot.git` para clonar el repositorio.
-2. El programa necesita las librerías `telebot` y 
-3. Guarda las llaves de acceso de OpenAI y del bot de Telegram en  el archivo `keys.txt` que tiene formato de archivo `json`, el cual debe ser respetado para el correcto funcionamiento del programa.
+### Sigue la secuencia de comandos presentados a continuación:
+
+```bash
+git clone https://github.com/armando-palacio/ChatGPT_on_telegram_bot.git
+cd ChatGPT_on_telegram_bot
+echo -n '{"OPENAI_KEY" : "your_openai_key", "TELEGRAM_TOKEN": "your_telegram_key"}' > keys.txt
+```
+
+La primera línea de código clona el repositorio en tu computadora. La segunda línea de código te permite acceder a la carpeta del repositorio. La tercera línea de código crea un nuevo archivo llamado `keys.txt` en el que se almacenan las claves de OpenAI y Telegram. En este archivo, reemplaza `your_openai_key` y `your_telegram_key` por tus claves de OpenAI y Telegram obtenidas previamente.
+
+### Ejecuta el script con:
+
+```bash
+python main.py
+```
