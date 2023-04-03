@@ -15,7 +15,7 @@ signal.signal(signal.SIGINT, handler_interrupt)
 
 dir_file_path = '/'.join(sys.argv[0].replace('\\','/').split('/')[:-1])
 path_keys = '/'.join([dir_file_path, 'keys.txt'])
-path_history = '/'.join([dir_file_path,'../ChatGPT-history/'])
+path_history = '/'.join([dir_file_path,'ChatGPT-history/'])
 
 if not os.path.isdir(path_history):
     os.mkdir(path_history)
