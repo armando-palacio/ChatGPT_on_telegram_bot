@@ -1,4 +1,4 @@
-import os, sys, json, time, telebot, openai, pandas as pd
+import os, sys, json, time, signal, telebot, openai, pandas as pd
 from telebot import types
 
 def show_env_vars():
@@ -6,6 +6,9 @@ def show_env_vars():
     for var in env_vars:
         print(var, ":", env_vars[var])
 
+def handler_interrupt(signum, frame):
+    save_content()
+    raise KeyboardInterrupt
  
 dir_file_path = sys.argv[0].split('/')[0]
 path_keys = '/'.join([dir_file_path, 'keys.txt'])
@@ -31,6 +34,7 @@ rols = {
         {"role": "assistant", "content": f"ok"}],
 }
 
+signal.signal(signal.SIGINT, handler_interrupt)
 
 bot = telebot.TeleBot(keys["TELEGRAM_TOKEN"])
 print('bot listo!',end='\n\n\n')
