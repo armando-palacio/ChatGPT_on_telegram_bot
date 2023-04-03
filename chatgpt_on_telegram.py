@@ -1,11 +1,19 @@
-import os, json, time, telebot, openai, pandas as pd
+import os, sys, json, time, telebot, openai, pandas as pd
 from telebot import types
 
-keys = json.load(open('keys.txt'))
+def show_env_vars():
+    env_vars = os.environ
+    for var in env_vars:
+        print(var, ":", env_vars[var])
+
+ 
+dir_file_path = sys.argv[0].split('/')[0]
+path_keys = '/'.join([dir_file_path, 'keys.txt'])
+path_history = '/'.join([dir_file_path,'../ChatGPT-history/'])
+
+keys = json.load(open(path_keys))
 
 openai.api_key = keys["OPENAI_KEY"]
-
-path_history = './ChatGPT-history/'
 
 file_in_use = ''
 actual_rol = 'Python coding 🐍'
