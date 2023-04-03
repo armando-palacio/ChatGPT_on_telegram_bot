@@ -1,16 +1,19 @@
-import os, sys, json, time, signal, telebot, openai, pandas as pd
+import os, sys, json, signal, telebot, openai, pandas as pd
 from telebot import types
 
-def show_env_vars():
-    env_vars = os.environ
-    for var in env_vars:
-        print(var, ":", env_vars[var])
+#--------------------------------------------------------------------------------------------------------------
+# funciones de manejo de señales
 
 def handler_interrupt(signum, frame):
     save_content()
     raise KeyboardInterrupt
  
-dir_file_path = sys.argv[0].split('/')[0]
+signal.signal(signal.SIGINT, handler_interrupt)
+
+#--------------------------------------------------------------------------------------------------------------
+# variables globales
+
+dir_file_path = '/'.join(sys.argv[0].replace('\\','/').split('/')[:-1])
 path_keys = '/'.join([dir_file_path, 'keys.txt'])
 path_history = '/'.join([dir_file_path,'../ChatGPT-history/'])
 
@@ -18,8 +21,6 @@ if not os.path.isdir(path_history):
     os.mkdir(path_history)
 
 keys = json.load(open(path_keys))
-
-openai.api_key = keys["OPENAI_KEY"]
 
 file_in_use = ''
 actual_rol = 'Python coding 🐍'
@@ -34,16 +35,19 @@ rols = {
         {"role": "assistant", "content": f"ok"}],
 }
 
-signal.signal(signal.SIGINT, handler_interrupt)
+#--------------------------------------------------------------------------------------------------------------
+# configuración de la API de OpenAI y del bot de Telegram
 
-bot = telebot.TeleBot(keys["TELEGRAM_TOKEN"])
+# openai.api_key = keys["OPENAI_KEY"]
+# bot = telebot.TeleBot(keys["TELEGRAM_TOKEN"])
+
+openai.api_key = os.getenv("OPENAI_KEY")
+bot = telebot.TeleBot(os.getenv("TELEGRAM_TOKEN"))
+
 print('bot listo!',end='\n\n\n')
 
-# comandos:
-# /newchat -> inicia nueva conversación
-# /log -> muestra el contexto actual
-# /load -> carga un contexto previamente guardado
-# /rol -> cambia rol de chatgpt
+#--------------------------------------------------------------------------------------------------------------
+# funciones
 
 def error(msg=''):
     print(msg, end='\n\n')
@@ -142,6 +146,7 @@ def get_rol_from_chatlog():
             return key
     error('Error, no existe el rol!')
 
+
 def send_hello(msg):
     print('Se entró en la función send_hello():')
     bot.send_message(chat_id=msg.chat.id, text=f'Que bolá Arche 👋. Mi rol actual es: {actual_rol} !')
@@ -149,15 +154,18 @@ def send_hello(msg):
     bot.pin_chat_message(chat_id=msg.chat.id, message_id=msg.message_id+1)
     print('2- Se fijó el mensaje!',end='\n\n')
 
-
-# manejar la pulsación del comando \log
-@bot.message_handler(commands=['log'])
-def show_log(message):
-    actual_content = '\n' + '\n'.join(['* ' + item['content'] for item in chat_log[2:] if item['role']=='user'])
-    bot.send_message(chat_id=message.chat.id, text=f'El contexto actual es: {actual_content}')
+#--------------------------------------------------------------------------------------------------------------
+# Bot Handlers
 
 
-# manejar salida del comando \newchat
+# comandos del bot:
+# /newchat -> inicia nueva conversación
+# /log -> muestra el contexto actual
+# /load -> carga un contexto previamente guardado
+# /rol -> cambia rol de chatgpt
+
+
+# maneja el comando \newchat
 @bot.message_handler(commands=['newchat'])
 def newchat(message):
     save_content()
@@ -166,7 +174,7 @@ def newchat(message):
     print()
 
 
-# manejar la pulsación del comando \load
+# maneja el comando \load
 @bot.message_handler(commands=['load'])
 def load_file_content(message):
     _, contents = get_contents_files('.json')
@@ -179,15 +187,22 @@ def load_file_content(message):
         bot.send_message(chat_id=message.chat.id, text='Elije un contexto para cargar:', reply_markup=keyboard)
 
 
-# manejar la pulsación del comando \rol
+# maneja el comando \log
+@bot.message_handler(commands=['log'])
+def show_log(message):
+    actual_content = '\n' + '\n'.join(['* ' + item['content'] for item in chat_log[2:] if item['role']=='user'])
+    bot.send_message(chat_id=message.chat.id, text=f'El contexto actual es: {actual_content}')
+
+
+# maneja el comando \rol
 @bot.message_handler(commands=['rol'])
 def change_rol(message):
     rol_menu = [[types.InlineKeyboardButton(text = item, callback_data=item.lower())] for item in rols.keys()]
     keyboard = types.InlineKeyboardMarkup(rol_menu)
-
     bot.send_message(chat_id=message.chat.id, text='Elije un rol para ChatGPT:', reply_markup=keyboard)
 
 
+# maneja las entradas de tenxto al chat del bot
 @bot.message_handler(content_types=['text'])
 def reply_handler(message):
     if message.text in ['q', 'quit', 'Q', 'Quit', 'exit', 'Exit']:
@@ -206,6 +221,7 @@ def reply_handler(message):
         chat_log.append({"role": "assistant", "content": response})
 
 
+# maneja las pulsaciones de botones de los menús
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     files_name, contents = get_contents_files('.json')
@@ -227,5 +243,8 @@ def callback_query(call):
 
     print()
 
+
+#--------------------------------------------------------------------------------------------------------------
+# Activa el bot
 
 bot.polling()
