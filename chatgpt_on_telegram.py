@@ -47,9 +47,6 @@ print('bot listo!',end='\n\n\n')
 
 def error(msg=''):
     print(msg, end='\n\n')
-    bot.stop_bot()
-    save_content()
-    time.sleep(3)
 
 
 def predict(chat_log):
