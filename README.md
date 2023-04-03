@@ -16,5 +16,5 @@
 ## ¿Cómo hacer funcionar el código?
 
 1. Dentro de tu carpeta de trabajo abre una nueva terminal y ejecuta el comando `git clone https://github.com/armando-palacio/ChatGPT_on_telegram_bot.git` para clonar el repositorio.
-2. El programa necesita las librerías `telebot` y ``
+2. El programa necesita las librerías `telebot` y 
 3. Guarda las llaves de acceso de OpenAI y del bot de Telegram en  el archivo `keys.txt` que tiene formato de archivo `json`, el cual debe ser respetado para el correcto funcionamiento del programa.
