@@ -90,3 +90,5 @@ Si tienes alguna pregunta o sugerencia, puedes contactarme a través de mi corre
 ### Captura de pantalla
 
 ![1680562259270](image/README/1680562259270.png)
+![1680562946335](image/README/1680562946335.png)
+![1680562980526](image/README/1680562980526.png)
