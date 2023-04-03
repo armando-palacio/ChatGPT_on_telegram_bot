@@ -11,6 +11,9 @@ dir_file_path = sys.argv[0].split('/')[0]
 path_keys = '/'.join([dir_file_path, 'keys.txt'])
 path_history = '/'.join([dir_file_path,'../ChatGPT-history/'])
 
+if not os.path.isdir(path_history):
+    os.mkdir(path_history)
+
 keys = json.load(open(path_keys))
 
 openai.api_key = keys["OPENAI_KEY"]
@@ -62,9 +65,6 @@ def delete_content():
 
 def save_content():
     global file_in_use
-
-    if not os.path.isdir(path_history):
-        os.mkdir(path_history)
 
     try:
         print(f'Se entró en la función {save_content.__name__}():')
