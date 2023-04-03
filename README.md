@@ -1,17 +1,19 @@
 # ChatGPT (gpt-3.5-turbo) sobre un bot de Telegram
-Este es un bot de Telegram que utiliza la API de OpenAI para responder cualquier tipo de consulta. Se guarda un registro completo de cada conversación para poder retomar un hilo de conversación en cualquier momento. La conversación puede ser guardada en un archivo para consultas posteriores.
 
+Este es un bot de Telegram que utiliza la API de OpenAI para responder cualquier tipo de consulta. Se guarda un registro completo de cada conversación para poder retomar un hilo de conversación en cualquier momento. La conversación puede ser guardada en un archivo para consultas posteriores.
 
 ## Tabla de contenido
 
-  - [Instalación](#instalación)
-  - [Uso](#uso)
-  - [Contribución](#contribución)
-  - [Autor](#autor)
-  - [Licencia](#licencia)
-  - [Apéndice](#apendice)
-    - [Creación del bot de Telegram y obtención del Token:](#creación-del-bot-de-telegram-y-obtención-del-token)
-    - [Obtención de la API de OpenAI:](#obtención-de-la-api-de-openai)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Contribución](#contribución)
+- [Autor](#autor)
+- [Licencia](#licencia)
+- [Contacto](#contacto)
+- [Apéndice](#apendice)
+  - [Creación del bot de Telegram y obtención del Token:](#creación-del-bot-de-telegram-y-obtención-del-token)
+  - [Obtención de la API de OpenAI:](#obtención-de-la-api-de-openai)
+  - [Captura de pantalla](#captura-de-pantallas)
 
 ## Instalación
 
@@ -23,7 +25,7 @@ cd ChatGPT_on_telegram_bot
 echo -n '{"OPENAI_KEY" : "your_openai_key", "TELEGRAM_TOKEN": "your_telegram_key"}' > keys.txt
 ```
 
-La primera línea de código clona el repositorio en tu computadora. La segunda línea de código te permite acceder a la carpeta del repositorio. La tercera línea de código crea un nuevo archivo llamado `keys.txt` en el que se almacenan las claves de OpenAI y Telegram. En esta línea de código, reemplaza `your_openai_key` y `your_telegram_key` por tus claves de OpenAI y Telegram. 
+La primera línea de código clona el repositorio en tu computadora. La segunda línea de código te permite acceder a la carpeta del repositorio. La tercera línea de código crea un nuevo archivo llamado `keys.txt` en el que se almacenan las claves de OpenAI y Telegram. En esta línea de código, reemplaza `your_openai_key` y `your_telegram_key` por tus claves de OpenAI y Telegram.
 
 Para obtener las claves de OpenAI y Telegram, sigue las instrucciones en la sección [Obtención de la API de OpenAI](#obtención-de-la-api-de-openai) y [Creación del bot de Telegram y obtención del Token](#creación-del-bot-de-telegram-y-obtención-del-token), respectivamente.
 
@@ -54,7 +56,6 @@ Si deseas contribuir al proyecto, puedes hacerlo de varias maneras:
 
 Cualquier contribución es bienvenida y agradecida.
 
-
 ## Autor
 
 Este proyecto fue creado por el Armando Palacio Romeu.
@@ -64,7 +65,14 @@ Este proyecto fue creado por el Armando Palacio Romeu.
 Este proyecto está bajo la Licencia [MIT](https://choosealicense.com/licenses/mit/). Para más información, consulte el archivo LICENSE.md en la raíz del proyecto.
 
 
+## Contacto
+
+Si tienes alguna pregunta o sugerencia, puedes contactarme a través de mi correo electrónico:
+
+- armandopr3009@gmail.com
+
 ## Apéndice
+
 ### Creación del bot de Telegram y obtención del Token:
 
 1. BotFather es el bot oficial de Telegram que te ayuda a crear y administrar bots. Para acceder a BotFather, busca "@BotFather" en Telegram y abre el chat.
@@ -78,3 +86,7 @@ Este proyecto está bajo la Licencia [MIT](https://choosealicense.com/licenses/m
    ![image](https://user-images.githubusercontent.com/66741745/229366334-f2acf173-969b-475e-82ca-61e4d984ac3c.png)
 3. Crear una nueva API presionando el botón `Create new secret keys`. Copiala y guardala en un lugar seguro, ya que se necesitará para acceder al modelo de generación `gpt-3.5-turbo`.
 
+
+### Captura de pantalla
+
+![1680562259270](image/README/1680562259270.png)

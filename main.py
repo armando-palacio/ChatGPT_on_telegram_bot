@@ -83,10 +83,10 @@ def save_content():
             if file_in_use: # si se está usando un archivo, se guarda en ese
                 print(f'{pasos}- Se cargó el chat actual desde un archivo!'); pasos+=1
 
-                if os.path.exists(path_history+file_in_use): # si el archivo existe, se sobreescribe
+                if os.path.exists(PATH_HISTORY+file_in_use): # si el archivo existe, se sobreescribe
                     print(f'{pasos}- Sobreescribiendo el archivo!', end='\n\n')
 
-                    pd.DataFrame(chat_log).T.to_json(path_history+file_in_use)
+                    pd.DataFrame(chat_log).T.to_json(PATH_HISTORY+file_in_use)
                     return
 
                 print(f'{pasos}- El archivo del cual se cargó el chat ya no existe!'); pasos+=1
@@ -97,7 +97,7 @@ def save_content():
 
             prompt = "Elije un título para la conversación basado en el contexto actual, que NO exceda las 5 palabras."
             response = predict(chat_log[2:] + [{"role": "user", "content": prompt}]).strip('."')
-            pd.DataFrame(chat_log).T.to_json(path_history+f'{response.lower()}.json')
+            pd.DataFrame(chat_log).T.to_json(PATH_HISTORY+f'{response.lower()}.json')
     except:
         error('Error, no se pudo guardar el contexto.')
 
@@ -105,24 +105,26 @@ def save_content():
 def get_contents_files(extension='.json'):
     print('Se entró en la función get_contents_files():')
     try:
-        files_name = [file for file in os.listdir(path_history) if file.endswith(extension)]
+        files_name = [file for file in os.listdir(PATH_HISTORY) if file.endswith(extension)]
         contents = [file.capitalize().replace(extension,'') for file in files_name]
 
         print(f'1- Se obtuvieron los nombres de los archivos {extension}!',end='\n\n')
         return files_name, contents
     except:
-        error('Error, no se encontraron archivos con la extensión especificada.')
+        error('Error, no se pudo obtener los nombres de los archivos.')
+        return [], []
 
 
 def get_content_from_file(file_name):
     print('Se entró en la función get_content_from_file():')
     try:
-        content = pd.read_json(path_history+file_name).to_dict()
+        content = pd.read_json(PATH_HISTORY+file_name).to_dict()
 
         print(f'1- Se obtuvo el registro a partir del archivo "{file_name}"!',end='\n\n')
         return [v for v in content.values()]
     except:
         error('Error, no se pudo cargar el contenido del archivo especificado.')
+        return []
 
 
 def set_rol(rol):
@@ -233,7 +235,13 @@ def callback_query(call):
     if call_data in z.keys():
         global chat_log, file_in_use, actual_rol
 
-        chat_log = get_content_from_file(z[call_data])
+        content = get_content_from_file(z[call_data])
+
+        if not content:
+            bot.send_message(chat_id=call.message.chat.id, text='No se pudo cargar el historial de este chat 🤷‍♂️')
+            return
+        
+        chat_log = content
         actual_rol = get_rol_from_chatlog()
         file_in_use = z[call_data]
         send_hello(call.message)
