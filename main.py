@@ -13,14 +13,16 @@ signal.signal(signal.SIGINT, handler_interrupt)
 #--------------------------------------------------------------------------------------------------------------
 # variables globales
 
-dir_file_path = '/'.join(sys.argv[0].replace('\\','/').split('/')[:-1])
-path_keys = '/'.join([dir_file_path, 'keys.txt'])
-path_history = '/'.join([dir_file_path,'ChatGPT-history/'])
+USER_NAME = 'Arche' # Nombre con el que quieres que el bot se refiera a ti
 
-if not os.path.isdir(path_history):
-    os.mkdir(path_history)
+DIR_FILE_PATH = '/'.join(sys.argv[0].replace('\\','/').split('/')[:-1])
+PATH_KEYS = '/'.join([DIR_FILE_PATH, 'keys.txt'])
+PATH_HISTORY = '/'.join([DIR_FILE_PATH,'ChatGPT-history/'])
 
-keys = json.load(open(path_keys))
+if not os.path.isdir(PATH_HISTORY):
+    os.mkdir(PATH_HISTORY)
+
+KEYS = json.load(open(PATH_KEYS))
 
 file_in_use = ''
 actual_rol = 'Python coding 🐍'
@@ -38,8 +40,8 @@ rols = {
 #--------------------------------------------------------------------------------------------------------------
 # configuración de la API de OpenAI y del bot de Telegram
 
-openai.api_key = keys["OPENAI_KEY"]
-bot = telebot.TeleBot(keys["TELEGRAM_TOKEN"])
+openai.api_key = KEYS["OPENAI_KEY"]
+bot = telebot.TeleBot(KEYS["TELEGRAM_TOKEN"])
 
 # openai.api_key = os.getenv("OPENAI_KEY")
 # bot = telebot.TeleBot(os.getenv("TELEGRAM_TOKEN"))
@@ -149,7 +151,7 @@ def get_rol_from_chatlog():
 
 def send_hello(msg):
     print('Se entró en la función send_hello():')
-    bot.send_message(chat_id=msg.chat.id, text=f'Que bolá Arche 👋. Mi rol actual es: {actual_rol} !')
+    bot.send_message(chat_id=msg.chat.id, text=f'Hola {USER_NAME} 👋. Mi rol actual es: {actual_rol} !')
     print('1- Se envió el mensaje de saludo al chat!')
     bot.pin_chat_message(chat_id=msg.chat.id, message_id=msg.message_id+1)
     print('2- Se fijó el mensaje!',end='\n\n')
