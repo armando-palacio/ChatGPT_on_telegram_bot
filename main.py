@@ -16,7 +16,7 @@ signal.signal(signal.SIGINT, handler_interrupt)
 USER_NAME = 'Arche' # Nombre con el que quieres que el bot se refiera a ti
 
 DIR_FILE_PATH = '/'.join(sys.argv[0].replace('\\','/').split('/')[:-1])
-DIR_FILE_PATH = DIRE_FILE_PATH if DIR_FILE_PATH else "."
+DIR_FILE_PATH = DIR_FILE_PATH if DIR_FILE_PATH else "."
 
 PATH_KEYS = '/'.join([DIR_FILE_PATH, 'keys.txt'])
 PATH_HISTORY = '/'.join([DIR_FILE_PATH,'ChatGPT-history/'])
