@@ -37,7 +37,7 @@ for /f "tokens=1,2 delims== " %G in (keys.json) do setx %G %H
 
 #### En linux:
 
-```
+```bash
 echo 'export $(cat variables.json | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")' >> $HOME/.bashrc
 source $HOME/.bashrc
 ```
@@ -48,7 +48,7 @@ Para obtener las claves de OpenAI y Telegram, sigue las instrucciones en la secc
 
 Para que el programa funcione correctamente es necesario instalar las librerías especificadas en el archivo `requirements.txt`. Para ello se puede ejecutar directamente la línea de comando:
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -56,11 +56,19 @@ El programa requiere además `FFmpeg` en el sistema para el correcto funcionamie
 
 #### En Windos:
 
-Descargar el [comprimido](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z). Descomprimir el archivo y copiar al disco `C:`. Renombrar la carpeta con el nombre 'ffmpeg'. Por último, agrega la ruta de la carpeta `bin` a la variable de entorno `PATH`. Se puede hacer mediante línea de comandos ejecutando `setx PATH "%PATH%;C:/ffmpeg/bin"`. Cierra la consola y listo!
+Descargar el [comprimido](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z). Descomprimir el archivo y copiar al disco `C:`. Renombrar la carpeta con el nombre 'ffmpeg'. Por último, agrega la ruta de la carpeta `bin` a la variable de entorno `PATH`. Se puede hacer mediante línea de comandos ejecutando:
+```bash
+setx PATH "%PATH%;C:/ffmpeg/bin"
+```
+Cierra la consola y listo!
 
 #### En linux:
 
-Simplemente abre una terminal y ejecuta el comando `sudo apt install ffmpeg`, listo!
+Simplemente abre una terminal y ejecuta el comando 
+```bash
+sudo apt install ffmpeg
+```
+listo!
 
 ### Ejecuta el script con:
 
