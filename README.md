@@ -54,11 +54,11 @@ pip install -r requirements.txt
 
 El programa requiere además `FFmpeg` en el sistema para el correcto funcionamiento del reconocimiento de voz a texto y la sintetización de texto a voz, por lo que es necesario instalarlo en caso de que no lo esté
 
-##### En Windos:
+#### En Windos:
 
 Descargar el [comprimido](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z). Descomprimir el archivo y copiar al disco `C:`. Renombrar la carpeta con el nombre 'ffmpeg'. Por último, agrega la ruta de la carpeta `bin` a la variable de entorno `PATH`. Se puede hacer mediante línea de comandos ejecutando `setx PATH "%PATH%;C:/ffmpeg/bin"`. Cierra la consola y listo!
 
-##### En linux:
+#### En linux:
 
 Simplemente abre una terminal y ejecuta el comando `sudo apt install ffmpeg`, listo!
 
