@@ -56,7 +56,11 @@ El programa requiere además `FFmpeg` en el sistema para el correcto funcionamie
 
 ##### En Windos:
 
-Descargar el [comprimido]([https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z]()) 
+Descargar el [comprimido](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z). Descomprimir el archivo y copiar al disco `C:`. Renombrar la carpeta con el nombre 'ffmpeg'. Por último, agrega la ruta de la carpeta `bin` a la variable de entorno `PATH`. Se puede hacer mediante línea de comandos ejecutando `setx PATH "%PATH%;C:/ffmpeg/bin"`. Cierra la consola y listo!
+
+##### En linux:
+
+Simplemente abre una terminal y ejecuta el comando `sudo apt install ffmpeg`, listo!
 
 ### Ejecuta el script con:
 
