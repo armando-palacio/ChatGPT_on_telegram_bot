@@ -44,13 +44,19 @@ source $HOME/.bashrc
 
 Para obtener las claves de OpenAI y Telegram, sigue las instrucciones en la sección [Obtención de la API de OpenAI](#obtención-de-la-api-de-openai) y [Creación del bot de Telegram y obtención del Token](#creación-del-bot-de-telegram-y-obtención-del-token), respectivamente.
 
-### Instala las librerías necesarias:
+### Instalar librerías necesarias:
 
 Para que el programa funcione correctamente es necesario instalar las librerías especificadas en el archivo `requirements.txt`. Para ello se puede ejecutar directamente la línea de comando:
 
 ```
 pip install -r requirements.txt
 ```
+
+El programa requiere además `FFmpeg` en el sistema para el correcto funcionamiento del reconocimiento de voz a texto y la sintetización de texto a voz, por lo que es necesario instalarlo en caso de que no lo esté
+
+##### En Windos:
+
+Descargar el [comprimido]([https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z]()) 
 
 ### Ejecuta el script con:
 
