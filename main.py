@@ -34,12 +34,12 @@ chats = {}
 #--------------------------------------------------------------------------------------------------------------
 # configuración de la API de OpenAI y del bot de Telegram
 
-OPENAI_KEY = os.getenv("OPENAI_KEY")
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+# OPENAI_KEY = os.getenv("OPENAI_KEY")
+# TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 # TELEGRAM_TOKEN = os.getenv("ARCHE_GPT_ASSISTANT_TELEGRAM_TOKEN")
 
-# OPENAI_KEY = KEYS["OPENAI_KEY"]
-# TELEGRAM_TOKEN = KEYS["TELEGRAM_TOKEN"]
+OPENAI_KEY = KEYS["OPENAI_KEY"]
+TELEGRAM_TOKEN = KEYS["TELEGRAM_TOKEN"]
 
 
 openai.api_key = OPENAI_KEY
