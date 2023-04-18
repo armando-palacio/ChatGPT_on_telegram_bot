@@ -1,2 +1,0 @@
-{"OPENAI_KEY" : "your_openai_key", "TELEGRAM_TOKEN": "your_telegram_token"}
-

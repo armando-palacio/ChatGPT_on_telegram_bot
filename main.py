@@ -10,7 +10,7 @@ import microsoft_azure as ms_azure
 DIR_FILE_PATH = '/'.join(sys.argv[0].replace('\\','/').split('/')[:-1])
 DIR_FILE_PATH = DIR_FILE_PATH if DIR_FILE_PATH else "."
 
-PATH_KEYS = '/'.join([DIR_FILE_PATH, 'keys.txt'])
+PATH_KEYS = '/'.join([DIR_FILE_PATH, 'keys.json'])
 PATH_HISTORY = '/'.join([DIR_FILE_PATH,'chats-history'])
 
 if not os.path.isdir(PATH_HISTORY):
@@ -34,16 +34,16 @@ chats = {}
 #--------------------------------------------------------------------------------------------------------------
 # configuración de la API de OpenAI y del bot de Telegram
 
-SPEECH_KEY = os.getenv('SPEECH_KEY')
-SPEECH_REGION = os.getenv('SPEECH_REGION')
+SPEECH_KEY = os.getenv('SPEECH_KEY') if os.getenv('SPEECH_KEY') else KEYS['SPEECH_KEY']
+SPEECH_REGION = os.getenv('SPEECH_REGION') if os.getenv('SPEECH_REGION') else KEYS['SPEECH_REGION']
 ms_azure.set_speech_config(subscription=SPEECH_KEY, region=SPEECH_REGION)
 
 
-OPENAI_KEY = os.getenv("OPENAI_KEY")
+OPENAI_KEY = os.getenv("OPENAI_KEY") if os.getenv("OPENAI_KEY") else KEYS['OPENAI_KEY']
 openai.api_key = OPENAI_KEY
 
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") if os.getenv("TELEGRAM_TOKEN") else KEYS['TELEGRAM_TOKEN']
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
