@@ -1,2 +1,4 @@
+.gitignore
 test.py
 chatgpt-3.5.py
+__pycache__/*
