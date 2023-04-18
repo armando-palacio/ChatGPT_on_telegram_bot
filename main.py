@@ -34,19 +34,20 @@ chats = {}
 #--------------------------------------------------------------------------------------------------------------
 # configuración de la API de OpenAI y del bot de Telegram
 
-# OPENAI_KEY = os.getenv("OPENAI_KEY")
-# TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-# TELEGRAM_TOKEN = os.getenv("ARCHE_GPT_ASSISTANT_TELEGRAM_TOKEN")
-
-OPENAI_KEY = KEYS["OPENAI_KEY"]
-TELEGRAM_TOKEN = KEYS["TELEGRAM_TOKEN"]
+SPEECH_KEY = os.getenv('SPEECH_KEY')
+SPEECH_REGION = os.getenv('SPEECH_REGION')
+ms_azure.set_speech_config(subscription=SPEECH_KEY, region=SPEECH_REGION)
 
 
+OPENAI_KEY = os.getenv("OPENAI_KEY")
 openai.api_key = OPENAI_KEY
+
+
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-print('bot listo!',end='\n\n\n')
 
+print('bot listo!',end='\n\n\n')
 
 #--------------------------------------------------------------------------------------------------------------
 # funciones

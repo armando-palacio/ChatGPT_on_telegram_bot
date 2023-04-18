@@ -22,12 +22,35 @@ Este es un bot de Telegram que utiliza la API de OpenAI para responder cualquier
 ```bash
 git clone https://github.com/armando-palacio/ChatGPT_on_telegram_bot.git
 cd ChatGPT_on_telegram_bot
-echo -n '{"OPENAI_KEY" : "your_openai_key", "TELEGRAM_TOKEN": "your_telegram_key"}' > keys.txt
+echo -n '{"OPENAI_KEY" : "your_openai_key", "TELEGRAM_TOKEN": "your_telegram_key", "SPEECH_KEY":"your_microsoft_azure_key", "SPEECH_REGION": "your_microsoft_azure_region"}' > keys.json
 ```
 
-La primera línea de código clona el repositorio en tu computadora. La segunda línea de código te permite acceder a la carpeta del repositorio. La tercera línea de código crea un nuevo archivo llamado `keys.txt` en el que se almacenan las claves de OpenAI y Telegram. En esta línea de código, reemplaza `your_openai_key` y `your_telegram_key` por tus claves de OpenAI y Telegram.
+La primera línea de código clona el repositorio en tu computadora. La segunda línea de código te permite acceder a la carpeta del repositorio. La tercera línea de código crea un nuevo archivo llamado `keys.txt` en el que se almacenan las claves de OpenAI, Telegram y Microsoft Azure. En esta línea de código, reemplaza `your_openai_key`, `your_telegram_key`, `your_microsoft_azure_key` y `your_microsoft_azure_region` por tus claves de OpenAI, Telegram y Microsoft Azure.
+
+Luego se necesita fijar las claves a variables de entorno para poder utilizar el código fuente. Sigue los pasos a continuación:
+
+#### En Windows:
+
+```bash
+for /f "tokens=1,2 delims== " %G in (keys.json) do setx %G %H
+```
+
+#### En linux:
+
+```
+echo 'export $(cat variables.json | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")' >> $HOME/.bashrc
+source $HOME/.bashrc
+```
 
 Para obtener las claves de OpenAI y Telegram, sigue las instrucciones en la sección [Obtención de la API de OpenAI](#obtención-de-la-api-de-openai) y [Creación del bot de Telegram y obtención del Token](#creación-del-bot-de-telegram-y-obtención-del-token), respectivamente.
+
+### Instala las librerías necesarias:
+
+Para que el programa funcione correctamente es necesario instalar las librerías especificadas en el archivo `requirements.txt`. Para ello se puede ejecutar directamente la línea de comando:
+
+```
+pip install -r requirements.txt
+```
 
 ### Ejecuta el script con:
 
@@ -64,7 +87,6 @@ Este proyecto fue creado por el Armando Palacio Romeu.
 
 Este proyecto está bajo la Licencia [MIT](https://choosealicense.com/licenses/mit/). Para más información, consulte el archivo LICENSE.md en la raíz del proyecto.
 
-
 ## Contacto
 
 Si tienes alguna pregunta o sugerencia, puedes contactarme a través de mi correo electrónico:
@@ -85,7 +107,6 @@ Si tienes alguna pregunta o sugerencia, puedes contactarme a través de mi corre
 2. Iniciar sesión y dirigirse a la pestaña de usuario en la parte derecha superior de la página y se seleccionar `View API Key`:
    ![image](https://user-images.githubusercontent.com/66741745/229366334-f2acf173-969b-475e-82ca-61e4d984ac3c.png)
 3. Crear una nueva API presionando el botón `Create new secret keys`. Copiala y guardala en un lugar seguro, ya que se necesitará para acceder al modelo de generación `gpt-3.5-turbo`.
-
 
 ### Captura de pantalla
 

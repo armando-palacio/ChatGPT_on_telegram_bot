@@ -1,10 +1,10 @@
 import os
 import azure.cognitiveservices.speech as speechsdk
 
-SPEECH_KEY = os.getenv('SPEECH_KEY')
-SPEECH_REGION = os.getenv('SPEECH_REGION')
+def set_speech_config(subscription, region):
+    global speech_config
+    speech_config = speechsdk.SpeechConfig(subscription=subscription, region=region)
 
-speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
 
 def text_to_speech(text, language="es-ES", filename="output.wav"):
     speech_config.speech_synthesis_language = language
