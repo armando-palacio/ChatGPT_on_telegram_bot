@@ -86,6 +86,7 @@ El bot cuenta con varios comandos adicionales:
 - `/log`: muestra el historial completo de la conversación actual.
 - `/load`: carga una conversación guardada en un archivo anteriormente.
 - `/rol`: cambia el rol de la conversación a una de las opciones predefinidas (General Assistant, Python Coding, Optical Communication Ing.). Estos roles se pueden cambiar en el archivo `main.py` y fijar tantos como se quieran.
+- `/read`: Si escribe este comando mientras hace Reply a un mensaje el bot generará el audio correspondiente al texto del mensaje replicado.
 
 ## Contribución
 
