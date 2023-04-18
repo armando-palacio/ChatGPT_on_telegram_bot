@@ -1,4 +1,4 @@
-import os, re, sys, json, signal, requests, telebot, openai, pandas as pd, numpy as np
+import os, re, sys, json, time, signal, requests, telebot, openai, pandas as pd, numpy as np
 from telebot import types
 import tiktoken; enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
 import pydub
@@ -44,10 +44,6 @@ openai.api_key = OPENAI_KEY
 
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") if os.getenv("TELEGRAM_TOKEN") else KEYS['TELEGRAM_TOKEN']
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
-
-
-print('bot listo!',end='\n\n\n')
 
 #--------------------------------------------------------------------------------------------------------------
 # funciones
@@ -278,163 +274,173 @@ signal.signal(signal.SIGINT, handler_interrupt)
 # /read -> lee un mensaje de texto si se hace referencia al mensaje
 
 
-@bot.message_handler(commands=['start'])
-def start(msg):
-    user = msg.from_user.username
-    if create_chat(msg): 
-        print(f"El ususario {user} inició una nueva conversación.")
-    chats[user].send_hello()
-    print()
+print('The bot is ready!!',end='\n\n\n')
 
-
-@bot.message_handler(commands=['read'])
-def read_message(msg):
-    user = msg.from_user.username
-    if create_chat(msg): 
-        print(f"El ususario {user} inició una nueva conversación.")
-    
-    text = msg.reply_to_message.text
-    
-    ms_azure.text_to_speech(text, filename='temp.wav')
-    bot.send_audio(chat_id=msg.chat.id, audio=open('temp.wav','rb'))
-    os.remove('temp.wav')
-
-
-# maneja el comando \newchat
-@bot.message_handler(commands=['newchat'])
-def newchat(msg):
-    user = msg.from_user.username
-    if create_chat(msg): 
-        print(f"El ususario {user} inició una nueva conversación.")
-        chats[user].send_hello()
-    else:
-        chats[user].new_chat()
-    print()
-
-
-# maneja el comando \load
-@bot.message_handler(commands=['load'])
-def load_file_content(msg):
-    user = msg.from_user.username
-
-    if create_chat(msg): 
-        print(f"El ususario {user} inició una nueva conversación.") 
-    
-    _, contents = chats[user].get_contents_files(extension='.json')
-
-    if not contents:
-        bot.send_message(chat_id=msg.chat.id, text='No se encontraron conversaciones previas 🤷‍♂️')
-    else:
-        menu = [[types.InlineKeyboardButton(text = content, callback_data=content.lower())] for content in contents]
-        keyboard = types.InlineKeyboardMarkup(menu)
-        bot.send_message(chat_id=msg.chat.id, text='Elije un contexto para cargar:', reply_markup=keyboard)
-
-
-# maneja el comando \log
-@bot.message_handler(commands=['log'])
-def show_log(msg):
-    user = msg.from_user.username
-
-    if create_chat(msg): 
-        print(f"El ususario {user} inició una nueva conversación.")
-    
-    actual_content = '\n' + '\n'.join(['* ' + item['content'] for item in chats[user].history[2:] if item['role']=='user'])
-    bot.send_message(chat_id=msg.chat.id, text=f'El contexto actual es: {actual_content}')
-
-
-# maneja el comando \rol
-@bot.message_handler(commands=['rol'])
-def change_rol(msg):
-    user = msg.from_user.username
-
-    if create_chat(msg): 
-        print(f"El ususario {user} inició una nueva conversación.")
-    
-    rol_menu = [[types.InlineKeyboardButton(text = item, callback_data=item.lower())] for item in ROLES.keys()]
-    keyboard = types.InlineKeyboardMarkup(rol_menu)
-    bot.send_message(chat_id=msg.chat.id, text='Elije un rol para ChatGPT:', reply_markup=keyboard)
-
-
-# maneja las entradas de texto al chat del bot
-@bot.message_handler(content_types=['text'])
-def reply_msg_handler(msg):    
-    user = msg.from_user.username
-
-    if create_chat(msg): 
-        print(f"El ususario {user} inició una nueva conversación.")
-
-    if msg.text in ['q', 'quit', 'Q', 'Quit', 'exit', 'Exit']:
-        print('Deteniendo el bot...\n\n')
-        bot.stop_bot()
-        chats[user].save_content()
-    else:
-        chats[user].response_to(msg)
-
-
-# maneja las descargas de archivos de audio y voz 
-@bot.message_handler(content_types=['voice', 'audio'])
-def handle_download_audio(message):
-    user = message.from_user.username
-
-    if create_chat(message): 
-        print(f"El ususario {user} inició una nueva conversación.")
-    
-    if message.content_type == 'voice':
-        file_info = bot.get_file(message.voice.file_id)
-    elif message.content_type == 'audio':
-        file_info = bot.get_file(message.audio.file_id)
-
-    msg = bot.send_message(chat_id=message.chat.id, text='`Descargando audio...`')
-    
-    download_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_info.file_path}'
-
-    response = requests.get(download_url).content
-    with open('output.ogg', 'wb') as f:
-        f.write(response)
-
-    sound = pydub.AudioSegment.from_ogg("output.ogg")
-    sound.export("output.wav", format='wav')
-    os.remove('output.ogg')
-
-    msg = bot.edit_message_text(text='`Convirtiendo audio...`', chat_id=msg.chat.id, message_id=msg.message_id)
-
+while 1:
     try:
-        text = ms_azure.speech_to_text('output.wav')
-    except:
-        text = '`No se pudo reconocer el audio`'
-
-    os.remove('output.wav')
-
-    msg = bot.edit_message_text(text=text, chat_id=msg.chat.id, message_id=msg.message_id)
-    chats[user].response_to(msg)
+        bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
+        @bot.message_handler(commands=['start'])
+        def start(msg):
+            user = msg.from_user.username
+            if create_chat(msg): 
+                print(f"El ususario {user} inició una nueva conversación.")
+            chats[user].send_hello()
+            print()
 
 
-# maneja las pulsaciones de botones de los menús
-@bot.callback_query_handler(func=lambda call: True)
-def callback_query(call):
-    chat_id = call.message.chat.id
-    user = get_user_by_chat_id(chat_id)
-
-    if not exist(user):
-        bot.send_message(chat_id=call.message.chat.id, text='No hay registro de este usuario. Presiona /newchat para iniciar una nueva conversación.')
-        return
-    
-    files_name, contents = chats[user].get_contents_files('.json')
-    call_data = call.data.capitalize()
-    z = dict(zip(contents, files_name))
-
-    if call_data in z.keys(): # carga un contexto previamente guardado
-        chats[user].set_content_from_file(z[call_data])
-
-    elif call_data in ROLES.keys(): # cambia el rol de chatgpt
-        chats[user].set_role(call_data)
-
-    print()
+        @bot.message_handler(commands=['read'])
+        def read_message(msg):
+            user = msg.from_user.username
+            if create_chat(msg): 
+                print(f"El ususario {user} inició una nueva conversación.")
+            
+            text = msg.reply_to_message.text
+            
+            ms_azure.text_to_speech(text, filename='temp.wav')
+            bot.send_audio(chat_id=msg.chat.id, audio=open('temp.wav','rb'))
+            os.remove('temp.wav')
 
 
-#--------------------------------------------------------------------------------------------------------------
-# Activa el bot
+        # maneja el comando \newchat
+        @bot.message_handler(commands=['newchat'])
+        def newchat(msg):
+            user = msg.from_user.username
+            if create_chat(msg): 
+                print(f"El ususario {user} inició una nueva conversación.")
+                chats[user].send_hello()
+            else:
+                chats[user].new_chat()
+            print()
 
-bot.polling()
+
+        # maneja el comando \load
+        @bot.message_handler(commands=['load'])
+        def load_file_content(msg):
+            user = msg.from_user.username
+
+            if create_chat(msg): 
+                print(f"El ususario {user} inició una nueva conversación.") 
+            
+            _, contents = chats[user].get_contents_files(extension='.json')
+
+            if not contents:
+                bot.send_message(chat_id=msg.chat.id, text='No se encontraron conversaciones previas 🤷‍♂️')
+            else:
+                menu = [[types.InlineKeyboardButton(text = content, callback_data=content.lower())] for content in contents]
+                keyboard = types.InlineKeyboardMarkup(menu)
+                bot.send_message(chat_id=msg.chat.id, text='Elije un contexto para cargar:', reply_markup=keyboard)
+
+
+        # maneja el comando \log
+        @bot.message_handler(commands=['log'])
+        def show_log(msg):
+            user = msg.from_user.username
+
+            if create_chat(msg): 
+                print(f"El ususario {user} inició una nueva conversación.")
+            
+            actual_content = '\n' + '\n'.join(['* ' + item['content'] for item in chats[user].history[2:] if item['role']=='user'])
+            bot.send_message(chat_id=msg.chat.id, text=f'El contexto actual es: {actual_content}')
+
+
+        # maneja el comando \rol
+        @bot.message_handler(commands=['rol'])
+        def change_rol(msg):
+            user = msg.from_user.username
+
+            if create_chat(msg): 
+                print(f"El ususario {user} inició una nueva conversación.")
+            
+            rol_menu = [[types.InlineKeyboardButton(text = item, callback_data=item.lower())] for item in ROLES.keys()]
+            keyboard = types.InlineKeyboardMarkup(rol_menu)
+            bot.send_message(chat_id=msg.chat.id, text='Elije un rol para ChatGPT:', reply_markup=keyboard)
+
+
+        # maneja las entradas de texto al chat del bot
+        @bot.message_handler(content_types=['text'])
+        def reply_msg_handler(msg):    
+            user = msg.from_user.username
+
+            if create_chat(msg): 
+                print(f"El ususario {user} inició una nueva conversación.")
+
+            if msg.text in ['q', 'quit', 'Q', 'Quit', 'exit', 'Exit']:
+                print('Deteniendo el bot...\n\n')
+                bot.stop_bot()
+                chats[user].save_content()
+            else:
+                chats[user].response_to(msg)
+
+
+        # maneja las descargas de archivos de audio y voz 
+        @bot.message_handler(content_types=['voice', 'audio'])
+        def handle_download_audio(message):
+            user = message.from_user.username
+
+            if create_chat(message): 
+                print(f"El ususario {user} inició una nueva conversación.")
+            
+            if message.content_type == 'voice':
+                file_info = bot.get_file(message.voice.file_id)
+            elif message.content_type == 'audio':
+                file_info = bot.get_file(message.audio.file_id)
+
+            msg = bot.send_message(chat_id=message.chat.id, text='`Descargando audio...`')
+            
+            download_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_info.file_path}'
+
+            response = requests.get(download_url).content
+            with open('output.ogg', 'wb') as f:
+                f.write(response)
+
+            sound = pydub.AudioSegment.from_ogg("output.ogg")
+            sound.export("output.wav", format='wav')
+            os.remove('output.ogg')
+
+            msg = bot.edit_message_text(text='`Convirtiendo audio...`', chat_id=msg.chat.id, message_id=msg.message_id)
+
+            try:
+                text = ms_azure.speech_to_text('output.wav')
+            except:
+                text = '`No se pudo reconocer el audio`'
+
+            os.remove('output.wav')
+
+            msg = bot.edit_message_text(text=text, chat_id=msg.chat.id, message_id=msg.message_id)
+            chats[user].response_to(msg)
+
+
+        # maneja las pulsaciones de botones de los menús
+        @bot.callback_query_handler(func=lambda call: True)
+        def callback_query(call):
+            chat_id = call.message.chat.id
+            user = get_user_by_chat_id(chat_id)
+
+            if not exist(user):
+                bot.send_message(chat_id=call.message.chat.id, text='No hay registro de este usuario. Presiona /newchat para iniciar una nueva conversación.')
+                return
+            
+            files_name, contents = chats[user].get_contents_files('.json')
+            call_data = call.data.capitalize()
+            z = dict(zip(contents, files_name))
+
+            if call_data in z.keys(): # carga un contexto previamente guardado
+                chats[user].set_content_from_file(z[call_data])
+
+            elif call_data in ROLES.keys(): # cambia el rol de chatgpt
+                chats[user].set_role(call_data)
+
+            print()
+
+        #--------------------------------------------------------------------------------------------------------------
+        # Activa el bot
+
+        bot.polling()
+
+    except requests.exceptions.ReadTimeout:
+        print('timeout!')
+    except requests.exceptions.ConnectionError:
+        print('error de conexión!')
+        time.sleep(5)
