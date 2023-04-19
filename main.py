@@ -48,8 +48,8 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") if os.getenv("TELEGRAM_TOKEN") else
 #--------------------------------------------------------------------------------------------------------------
 # funciones
 
-def error(msg=''):
-    print(msg, end='\n\n')
+def _print_(*msg):
+    print(*msg, end='\n\n')
 
 def exist(username):
     return True if username in chats.keys() else False
@@ -84,23 +84,40 @@ def predict(chat):
 # clases útiles
 
 class Chat:
-    def __init__(self, msg: types.Message, history: list=[]):
-        self.user = msg.from_user.username
-        self.chat_id = msg.chat.id
-        self.first_name = msg.from_user.first_name
-
-        self.history = history
-        self.tokens = self.get_tokens_from_chat(history)
-        self.length = len(history)
-
-        self.file_in_use = ''
-        self.role = self.get_role()
+    def __init__(self, msg: types.Message=None, chat=None, history: list=[]):
+        if chat:
+            self.user = chat.user
+            self.chat_id = chat.chat_id
+            self.first_name = chat.first_name
+			
+            self.history = chat.history
+            self.tokens = chat.tokens
+            self.length = chat.length
+			
+            self.file_in_use = chat.file_in_use
+            self.role = chat.role
+        elif msg:	
+            self.user = msg.from_user.username
+            self.chat_id = msg.chat.id
+            self.first_name = msg.from_user.first_name
+            
+            self.history = history
+            self.tokens = self.get_tokens_from_chat(history)
+            self.length = len(history)
+            
+            self.file_in_use = ''
+            self.role = self.get_role()
+            print(f'Se creó un nuevo chat para el usuario `{msg.from_user.username}`')
+            _print_(f'role: `{self.role}`')
 
     def add(self, role, content):
         self.history.append({"role": role, "content": content})
         self.tokens += self.get_tokens(content)
         self.length += 1
         return self
+
+    def copy(self):
+        return Chat(chat=self)
 
     def __str__(self):
         return '\n'.join([f"{m['role']}: {m['content']}" for m in self.history])
@@ -124,14 +141,12 @@ class Chat:
     
     def get_role(self):
         if not self.history[0]['content']:
-            print('1- Se obtuvo el rol: General assistant 🤖!',end='\n\n')
             return 'General assistant 🤖'
 
         for key, value in zip(ROLES.keys(), ROLES.values()):
             if key == 'General assistant 🤖':
                 continue
             if value[0]['content'] == self.history[0]['content']:
-                print(f'1- Se obtuvo el rol: {key}!',end='\n\n')
                 return key
     
     def set_role(self, role):
@@ -169,7 +184,8 @@ class Chat:
 
                 # si no se está usando un archivo o el archivo en uso ya no existe, se guarda en un nuevo archivo
                 prompt = "Elije un título para la conversación basado en el contexto actual, que NO exceda las 5 palabras."
-                chat = Chat(user=self.user, chat_id=self.chat_id, history=self.history[2:] + [{"role": "user", "content": prompt}])
+                chat = self.copy()
+                chat.history = chat.history[2:] + [{"role": "user", "content": prompt}]
                 response = predict(chat).strip('.')
 
                 regex = re.compile('[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9_\-.\s]+')
@@ -183,8 +199,8 @@ class Chat:
                 pd.DataFrame(self.history).T.to_json(path)
                 self.file_in_use = f'{response.lower()}.json'
                 print('Se guardó el archivo',end='\n\n')
-        except:
-            error('Error, no se pudo guardar el contexto actual.')
+        except Exception as e:
+            _print_('Error in `save_content()`:', e)
         
     def get_contents_files(self, extension='.json'):
         print('Se entró en la función get_contents_files():')
@@ -195,8 +211,8 @@ class Chat:
 
             print(f'1- Se obtuvieron los nombres de los archivos {extension}!',end='\n\n')
             return files_name, contents
-        except:
-            error('Error, no se pudo obtener los nombres de los archivos.')
+        except Exception as e:
+            _print_('Error in `get_contents_files()`:', e)
             return [], []
         
     def get_content_from_file(self, file_name: str) -> list:
@@ -207,8 +223,8 @@ class Chat:
 
             print(f'1- Se obtuvo el registro a partir del archivo "{file_name}"!',end='\n\n')
             return [v for v in content.values()]
-        except:
-            error('Error, no se pudo cargar el contenido del archivo especificado.')
+        except Exception as e:
+            _print_('Error in `get_content_from_file()`:', e)
             return []
         
     def set_content_from_file(self, file_name: str):
@@ -227,11 +243,10 @@ class Chat:
         self.send_hello()
 
     def send_hello(self):
-        print('Se entró en la función send_hello():')
+        print(f'Enviando saludo al usuario `{self.user}`')
         msg = bot.send_message(chat_id=self.chat_id, text=f'Hola {self.first_name} 👋. Mi rol actual es: {self.role} !')
-        print('1- Se envió el mensaje de saludo al chat!')
         bot.pin_chat_message(chat_id=self.chat_id, message_id=msg.message_id)
-        print('2- Se fijó el mensaje!',end='\n\n')
+        _print_('Se fijó el mensaje de saludo')
 
     def response_to(self, msg: types.Message):
         self.add("user", msg.text)
@@ -257,7 +272,7 @@ class Chat:
 def handler_interrupt(signum, frame):
     for chat in chats.values():
         chat.save_content()
-    raise KeyboardInterrupt
+    raise SystemExit('Deteniendo el bot...')
  
 signal.signal(signal.SIGINT, handler_interrupt)
 
@@ -276,7 +291,7 @@ signal.signal(signal.SIGINT, handler_interrupt)
 
 print('The bot is ready!!',end='\n\n\n')
 
-while 1:
+while True:
     try:
         bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -284,17 +299,15 @@ while 1:
         @bot.message_handler(commands=['start'])
         def start(msg):
             user = msg.from_user.username
-            if create_chat(msg): 
-                print(f"El ususario {user} inició una nueva conversación.")
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario
+
             chats[user].send_hello()
             print()
 
 
         @bot.message_handler(commands=['read'])
         def read_message(msg):
-            user = msg.from_user.username
-            if create_chat(msg): 
-                print(f"El ususario {user} inició una nueva conversación.")
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario
             
             text = msg.reply_to_message.text
             
@@ -307,8 +320,7 @@ while 1:
         @bot.message_handler(commands=['newchat'])
         def newchat(msg):
             user = msg.from_user.username
-            if create_chat(msg): 
-                print(f"El ususario {user} inició una nueva conversación.")
+            if create_chat(msg):
                 chats[user].send_hello()
             else:
                 chats[user].new_chat()
@@ -319,9 +331,7 @@ while 1:
         @bot.message_handler(commands=['load'])
         def load_file_content(msg):
             user = msg.from_user.username
-
-            if create_chat(msg): 
-                print(f"El ususario {user} inició una nueva conversación.") 
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario
             
             _, contents = chats[user].get_contents_files(extension='.json')
 
@@ -337,9 +347,7 @@ while 1:
         @bot.message_handler(commands=['log'])
         def show_log(msg):
             user = msg.from_user.username
-
-            if create_chat(msg): 
-                print(f"El ususario {user} inició una nueva conversación.")
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario
             
             actual_content = '\n' + '\n'.join(['* ' + item['content'] for item in chats[user].history[2:] if item['role']=='user'])
             bot.send_message(chat_id=msg.chat.id, text=f'El contexto actual es: {actual_content}')
@@ -348,10 +356,7 @@ while 1:
         # maneja el comando \rol
         @bot.message_handler(commands=['rol'])
         def change_rol(msg):
-            user = msg.from_user.username
-
-            if create_chat(msg): 
-                print(f"El ususario {user} inició una nueva conversación.")
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario
             
             rol_menu = [[types.InlineKeyboardButton(text = item, callback_data=item.lower())] for item in ROLES.keys()]
             keyboard = types.InlineKeyboardMarkup(rol_menu)
@@ -362,9 +367,7 @@ while 1:
         @bot.message_handler(content_types=['text'])
         def reply_msg_handler(msg):    
             user = msg.from_user.username
-
-            if create_chat(msg): 
-                print(f"El ususario {user} inició una nueva conversación.")
+            create_chat(msg)
 
             if msg.text in ['q', 'quit', 'Q', 'Quit', 'exit', 'Exit']:
                 print('Deteniendo el bot...\n\n')
@@ -378,9 +381,7 @@ while 1:
         @bot.message_handler(content_types=['voice', 'audio'])
         def handle_download_audio(message):
             user = message.from_user.username
-
-            if create_chat(message): 
-                print(f"El ususario {user} inició una nueva conversación.")
+            create_chat(message)
             
             if message.content_type == 'voice':
                 file_info = bot.get_file(message.voice.file_id)
@@ -406,7 +407,8 @@ while 1:
             except:
                 text = '`No se pudo reconocer el audio`'
 
-            os.remove('output.wav')
+            if os.path.exists('output.wav'): 
+                os.remove('output.wav')
 
             msg = bot.edit_message_text(text=text, chat_id=msg.chat.id, message_id=msg.message_id)
             chats[user].response_to(msg)
