@@ -68,10 +68,7 @@ def get_user_by_chat_id(chat_id):
     return None
 
 def predict(chat):
-    if chat.tokens > 4000:
-        prompt = chat.get_bound( bound=4000 )
-    else:
-        prompt = chat.history
+    prompt = chat.get_bound( bound=4000 )
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -128,7 +125,7 @@ class Chat:
             tokens.append(self.get_tokens(message["content"]))
         
         temp = np.array(tokens)[::-1].cumsum()
-        return self.history[-np.where(temp<bound)[0].max():]
+        return self.history[temp[::-1]<bound]
 
     def get_tokens(self, text):
         return len(enc.encode(text))
