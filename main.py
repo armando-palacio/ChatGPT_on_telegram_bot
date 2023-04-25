@@ -125,7 +125,7 @@ class Chat:
             tokens.append(self.get_tokens(message["content"]))
         
         temp = np.array(tokens)[::-1].cumsum()
-        return self.history[temp[::-1]<bound]
+        return np.array(self.history, dtype=object)[temp[::-1]<bound].tolist()
 
     def get_tokens(self, text):
         return len(enc.encode(text))
