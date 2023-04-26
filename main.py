@@ -30,7 +30,6 @@ KEYS = json.load(open(PATH_KEYS))
 
 chats = {}
 
-
 #--------------------------------------------------------------------------------------------------------------
 # configuración de la API de OpenAI y del bot de Telegram
 
@@ -54,10 +53,34 @@ def _print_(*msg):
 def exist(username):
     return True if username in chats.keys() else False
 
+def create_temp_file(user):
+    endpoint = {}
+    endpoint['chat'] = chats[user].__dict__
+
+    if not os.path.isdir(f'{PATH_HISTORY}/{user}'):
+        os.mkdir(f'{PATH_HISTORY}/{user}')
+
+    with open(f'{PATH_HISTORY}/{user}/~temp.json', 'w') as f:
+        json.dump(endpoint, f)
+
+def get_temp_file(user):
+    if not os.path.isdir(f'{PATH_HISTORY}/{user}'):
+        return
+
+    with open(f'{PATH_HISTORY}/{user}/~temp.json', 'r') as f:
+        endpoint = json.load(f)
+    return endpoint
+
+def delete_temp_file(user):
+    if not os.path.isdir(f'{PATH_HISTORY}/{user}'):
+        return
+    os.remove(f'{PATH_HISTORY}/{user}/~temp.json')
+
 def create_chat(msg):
     username = msg.from_user.username
     if not exist(username):
         chats[username] = Chat( msg=msg, history=ROLES[DEFAULT_ROLE] )
+        create_temp_file(username)
         return True
     return False
 
@@ -81,19 +104,8 @@ def predict(chat):
 # clases útiles
 
 class Chat:
-    def __init__(self, msg: types.Message=None, chat=None, history: list=[]):
-        if chat:
-            self.user = chat.user
-            self.chat_id = chat.chat_id
-            self.first_name = chat.first_name
-			
-            self.history = chat.history
-            self.tokens = chat.tokens
-            self.length = chat.length
-			
-            self.file_in_use = chat.file_in_use
-            self.role = chat.role
-        elif msg:	
+    def __init__(self, msg: types.Message=None, chat=None, from_dict :dict=None, history: list=[]):
+        if msg:	
             self.user = msg.from_user.username
             self.chat_id = msg.chat.id
             self.first_name = msg.from_user.first_name
@@ -104,8 +116,33 @@ class Chat:
             
             self.file_in_use = ''
             self.role = self.get_role()
+            self.pinned_msg_id = None
             print(f'Se creó un nuevo chat para el usuario `{msg.from_user.username}`')
             _print_(f'role: `{self.role}`')
+        elif chat:
+            self.user = chat.user
+            self.chat_id = chat.chat_id
+            self.first_name = chat.first_name
+			
+            self.history = chat.history
+            self.tokens = chat.tokens
+            self.length = chat.length
+			
+            self.file_in_use = chat.file_in_use
+            self.role = chat.role
+            self.pinned_msg_id = chat.pinned_msg_id
+        elif from_dict:
+            self.user = from_dict['user']
+            self.chat_id = from_dict['chat_id']
+            self.first_name = from_dict['first_name']
+            
+            self.history = from_dict['history']
+            self.tokens = from_dict['tokens']
+            self.length = from_dict['length']
+            
+            self.file_in_use = from_dict['file_in_use']
+            self.role = from_dict['role']
+            self.pinned_msg_id = from_dict['pinned_msg_id']
 
     def add(self, role, content):
         self.history.append({"role": role, "content": content})
@@ -242,7 +279,12 @@ class Chat:
     def send_hello(self):
         print(f'Enviando saludo al usuario `{self.user}`')
         msg = bot.send_message(chat_id=self.chat_id, text=f'Hola {self.first_name} 👋. Mi rol actual es: {self.role} !')
-        bot.pin_chat_message(chat_id=self.chat_id, message_id=msg.message_id)
+        
+        if self.pinned_msg_id is not None:
+            bot.unpin_chat_message(chat_id=self.chat_id, message_id=self.pinned_msg_id)
+        self.pinned_msg_id = msg.message_id
+        
+        bot.pin_chat_message(chat_id=self.chat_id, message_id=self.pinned_msg_id)
         _print_('Se fijó el mensaje de saludo')
 
     def response_to(self, msg: types.Message):
@@ -268,7 +310,7 @@ class Chat:
 
 def handler_interrupt(signum, frame):
     for chat in chats.values():
-        chat.save_content()
+        create_temp_file(chat.user)
     raise SystemExit('Deteniendo el bot...')
  
 signal.signal(signal.SIGINT, handler_interrupt)
@@ -279,11 +321,23 @@ signal.signal(signal.SIGINT, handler_interrupt)
 
 
 # comandos del bot:
-# /newchat -> inicia nueva conversación
-# /log -> muestra el contexto actual
-# /load -> carga un contexto previamente guardado
-# /rol -> cambia rol de chatgpt
-# /read -> lee un mensaje de texto si se hace referencia al mensaje
+# newchat - inicia nueva conversación
+# log - muestra el contexto actual
+# load - carga un contexto previamente guardado
+# setrol - cambia rol de chatgpt
+# read - lee un mensaje de texto si se hace referencia al mensaje
+
+# comandos de testeo:
+# user - muestra el usuario actual
+# rol - muestra el rol actual
+
+
+for user in os.listdir(PATH_HISTORY):
+    path = f'{PATH_HISTORY}/{user}/~temp.json'
+    if os.path.exists(path):
+        _dict_ = json.load(open(path))
+        chats[user] = Chat( from_dict=_dict_['chat'] )
+        print('Se recuperó el chat de:', user)
 
 
 print('The bot is ready!!',end='\n\n\n')
@@ -296,15 +350,32 @@ while True:
         @bot.message_handler(commands=['start'])
         def start(msg):
             user = msg.from_user.username
-            create_chat(msg) # crea un nuevo chat SI no existe el usuario
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario y un archivo temporal ~temp.json en la carpeta del historial del usuario
 
             chats[user].send_hello()
+            create_temp_file(user)
+            print()
+
+
+        @bot.message_handler(commands=['user'])
+        def start(msg):
+            user = msg.from_user.username
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario y un archivo temporal ~temp.json en la carpeta del historial del usuario
+            bot.send_message(chat_id=msg.chat.id, text=f'El usuario actual es: @{user}')
+            print()
+
+
+        @bot.message_handler(commands=['rol'])
+        def start(msg):
+            user = msg.from_user.username
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario y un archivo temporal ~temp.json en la carpeta del historial del usuario
+            bot.send_message(chat_id=msg.chat.id, text=f'El rol actual es: {chats[user].role}')
             print()
 
 
         @bot.message_handler(commands=['read'])
         def read_message(msg):
-            create_chat(msg) # crea un nuevo chat SI no existe el usuario
+            create_chat(msg) # crea un nuevo chat SI no existe el usuario y un archivo temporal ~temp.json en la carpeta del historial del usuario
             
             text = msg.reply_to_message.text
             
@@ -321,6 +392,7 @@ while True:
                 chats[user].send_hello()
             else:
                 chats[user].new_chat()
+            create_temp_file(user)
             print()
 
 
@@ -350,8 +422,8 @@ while True:
             bot.send_message(chat_id=msg.chat.id, text=f'El contexto actual es: {actual_content}')
 
 
-        # maneja el comando \rol
-        @bot.message_handler(commands=['rol'])
+        # maneja el comando \setrol
+        @bot.message_handler(commands=['setrol'])
         def change_rol(msg):
             create_chat(msg) # crea un nuevo chat SI no existe el usuario
             
@@ -366,12 +438,11 @@ while True:
             user = msg.from_user.username
             create_chat(msg)
 
-            if msg.text in ['q', 'quit', 'Q', 'Quit', 'exit', 'Exit']:
-                print('Deteniendo el bot...\n\n')
-                bot.stop_bot()
-                chats[user].save_content()
-            else:
-                chats[user].response_to(msg)
+            if msg.text.startswith('/'):
+                bot.send_message(chat_id=msg.chat.id, text='No puedo reconocer este comando 😕')
+                return
+            chats[user].response_to(msg)
+            create_temp_file(user)
 
 
         # maneja las descargas de archivos de audio y voz 
@@ -409,6 +480,7 @@ while True:
 
             msg = bot.edit_message_text(text=text, chat_id=msg.chat.id, message_id=msg.message_id)
             chats[user].response_to(msg)
+            create_temp_file(user)
 
 
         # maneja las pulsaciones de botones de los menús
@@ -431,6 +503,7 @@ while True:
             elif call_data in ROLES.keys(): # cambia el rol de chatgpt
                 chats[user].set_role(call_data)
 
+            create_temp_file(user)
             print()
 
         #--------------------------------------------------------------------------------------------------------------
