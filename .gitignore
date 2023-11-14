@@ -3,3 +3,4 @@ test.py
 chatgpt-3.5.py
 __pycache__/*
 chat-history/*
+test.ipynb

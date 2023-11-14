@@ -1,17 +1,15 @@
-import os, re, sys, json, time, signal, requests, telebot, openai, pandas as pd, numpy as np
+import os, re, sys, json, time, signal, requests, telebot, pandas as pd, numpy as np
 from telebot import types
+from openai import OpenAI
 import tiktoken; enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
-import pydub
-import microsoft_azure as ms_azure
-
+from pathlib import Path
+import pydub, io
 #--------------------------------------------------------------------------------------------------------------
 # variables globales
 
-DIR_FILE_PATH = '/'.join(sys.argv[0].replace('\\','/').split('/')[:-1])
-DIR_FILE_PATH = DIR_FILE_PATH if DIR_FILE_PATH else "."
-
-PATH_KEYS = '/'.join([DIR_FILE_PATH, 'keys.json'])
-PATH_HISTORY = '/'.join([DIR_FILE_PATH,'chats-history'])
+DIR_FILE_PATH = Path(__file__).parent
+PATH_KEYS = DIR_FILE_PATH / 'keys.json'
+PATH_HISTORY = DIR_FILE_PATH / 'chats-history'
 
 if not os.path.isdir(PATH_HISTORY):
     os.mkdir(PATH_HISTORY)
@@ -26,26 +24,39 @@ ROLES = {
         {"role": "assistant", "content": f"ok"}],
 }
 
-KEYS = json.load(open(PATH_KEYS))
+try:
+    KEYS = {'OPENAI_KEY': os.environ['OPENAI_API_KEY'], 'TELEGRAM_TOKEN': os.environ['TELEGRAM_TOKEN']}
+except:
+    KEYS = json.load(open(PATH_KEYS))
 
 chats = {}
 
 #--------------------------------------------------------------------------------------------------------------
 # configuración de la API de OpenAI y del bot de Telegram
 
-SPEECH_KEY = os.getenv('SPEECH_KEY') if os.getenv('SPEECH_KEY') else KEYS['SPEECH_KEY']
-SPEECH_REGION = os.getenv('SPEECH_REGION') if os.getenv('SPEECH_REGION') else KEYS['SPEECH_REGION']
-ms_azure.set_speech_config(subscription=SPEECH_KEY, region=SPEECH_REGION)
+client = OpenAI(api_key=KEYS['OPENAI_KEY'])
 
-
-OPENAI_KEY = os.getenv("OPENAI_KEY") if os.getenv("OPENAI_KEY") else KEYS['OPENAI_KEY']
-openai.api_key = OPENAI_KEY
-
-
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") if os.getenv("TELEGRAM_TOKEN") else KEYS['TELEGRAM_TOKEN']
+TELEGRAM_TOKEN = KEYS['TELEGRAM_TOKEN']
 
 #--------------------------------------------------------------------------------------------------------------
 # funciones
+def voice2text(filename):
+    file = open(filename, "rb")
+    response = client.audio.transcriptions.create(
+        model="whisper-1", 
+        file= file
+    )
+    file.close()
+    return response.text
+
+def text2voice(text):
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="echo",
+        input=text
+    )
+    response.stream_to_file(DIR_FILE_PATH / "temp.mp3")
+    return open('temp.mp3','rb')
 
 def _print_(*msg):
     print(*msg, end='\n\n')
@@ -93,11 +104,11 @@ def get_user_by_chat_id(chat_id):
 def predict(chat):
     prompt = chat.get_bound( bound=4000 )
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
         messages=prompt
     )
-    return response['choices'][0]['message']['content'].strip(' \n')
+    return response.choices[0].message.content
 
 
 #--------------------------------------------------------------------------------------------------------------
@@ -287,16 +298,34 @@ class Chat:
         bot.pin_chat_message(chat_id=self.chat_id, message_id=self.pinned_msg_id)
         _print_('Se fijó el mensaje de saludo')
 
-    def response_to(self, msg: types.Message):
+    def response_to_text(self, msg: types.Message):
+        bot.send_chat_action(msg.chat.id, 'typing')
         self.add("user", msg.text)
-        temp = bot.reply_to(msg, '`Generando...`')
-
         response = predict(self)
-
         bot.send_message(chat_id=msg.chat.id, text=response)
-        bot.delete_message(chat_id=temp.chat.id, message_id=temp.message_id)
-
         self.add("assistant", response)
+
+    def response_to_voice(self, msg: types.Voice):
+        bot.send_chat_action(msg.chat.id, 'record_audio')
+
+        voice_bytes = bot.download_file( bot.get_file(msg.voice.file_id).file_path )
+        bot.send_chat_action(msg.chat.id, 'record_audio')
+
+        with open('output.ogg', 'wb') as f:
+            f.write(voice_bytes)
+
+        input_text = voice2text('output.ogg'); os.remove('output.ogg')
+        bot.send_chat_action(msg.chat.id, 'record_audio')
+
+        self.add("user", input_text)
+
+        output_text = predict(self)
+
+        self.add("assistant", output_text)
+        bot.send_chat_action(msg.chat.id, 'record_audio')
+
+        output_voice = text2voice(output_text)
+        bot.send_voice(chat_id=msg.chat.id, voice=output_voice); output_voice.close(); os.remove('temp.mp3')
 
     def new_chat(self):
         self.save_content()
@@ -379,9 +408,14 @@ while True:
             
             text = msg.reply_to_message.text
             
-            ms_azure.text_to_speech(text, filename='temp.wav')
-            bot.send_audio(chat_id=msg.chat.id, audio=open('temp.wav','rb'))
-            os.remove('temp.wav')
+            response = client.audio.speech.create(
+              model="tts-1",
+              voice="echo",
+              input=text
+            )
+            response.stream_to_file(DIR_FILE_PATH / "temp.mp3")
+            bot.send_voice(chat_id=msg.chat.id, voice=open('temp.mp3','rb'))
+            os.remove('temp.mp3')
 
 
         # maneja el comando \newchat
@@ -441,45 +475,16 @@ while True:
             if msg.text.startswith('/'):
                 bot.send_message(chat_id=msg.chat.id, text='No puedo reconocer este comando 😕')
                 return
-            chats[user].response_to(msg)
+            chats[user].response_to_text(msg)
             create_temp_file(user)
 
 
         # maneja las descargas de archivos de audio y voz 
-        @bot.message_handler(content_types=['voice', 'audio'])
+        @bot.message_handler(content_types=['voice'])
         def handle_download_audio(message):
             user = message.from_user.username
             create_chat(message)
-            
-            if message.content_type == 'voice':
-                file_info = bot.get_file(message.voice.file_id)
-            elif message.content_type == 'audio':
-                file_info = bot.get_file(message.audio.file_id)
-
-            msg = bot.send_message(chat_id=message.chat.id, text='`Descargando audio...`')
-            
-            download_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_info.file_path}'
-
-            response = requests.get(download_url).content
-            with open('output.ogg', 'wb') as f:
-                f.write(response)
-
-            sound = pydub.AudioSegment.from_ogg("output.ogg")
-            sound.export("output.wav", format='wav')
-            os.remove('output.ogg')
-
-            msg = bot.edit_message_text(text='`Convirtiendo audio...`', chat_id=msg.chat.id, message_id=msg.message_id)
-
-            try:
-                text = ms_azure.speech_to_text('output.wav')
-            except:
-                text = '`No se pudo reconocer el audio`'
-
-            if os.path.exists('output.wav'): 
-                os.remove('output.wav')
-
-            msg = bot.edit_message_text(text=text, chat_id=msg.chat.id, message_id=msg.message_id)
-            chats[user].response_to(msg)
+            chats[user].response_to_voice(message)
             create_temp_file(user)
 
 
