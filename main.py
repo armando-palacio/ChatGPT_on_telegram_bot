@@ -164,7 +164,7 @@ while True:
         def handle_download_audio(message):
             user = message.from_user.username
             create_chat(message, chats)
-            chats[user].response_to_voice(message)
+            chats[user].response_to_voice(message, bot)
 
 
         # maneja las pulsaciones de botones de los menús
