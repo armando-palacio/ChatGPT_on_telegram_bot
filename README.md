@@ -22,53 +22,32 @@ Este es un bot de Telegram que utiliza la API de OpenAI para responder cualquier
 ```bash
 git clone https://github.com/armando-palacio/ChatGPT_on_telegram_bot.git
 cd ChatGPT_on_telegram_bot
-echo -n '{"OPENAI_KEY" : "your_openai_key", "TELEGRAM_TOKEN": "your_telegram_key", "SPEECH_KEY":"your_microsoft_azure_key", "SPEECH_REGION": "your_microsoft_azure_region"}' > keys.json
 ```
 
-La primera línea de código clona el repositorio en tu computadora. La segunda línea de código te permite acceder a la carpeta del repositorio. La tercera línea de código crea un nuevo archivo llamado `keys.txt` en el que se almacenan las claves de OpenAI, Telegram y Microsoft Azure. En esta línea de código, reemplaza `your_openai_key`, `your_telegram_key`, `your_microsoft_azure_key` y `your_microsoft_azure_region` por tus claves de OpenAI, Telegram y Microsoft Azure.
+La primera línea de código clona el repositorio en tu computadora. La segunda línea de código te permite acceder a la carpeta del repositorio. La tercera y cuarta línea de código guarda como variables de entorno del sistema las API KEYs de OpenAI y Telegram respectivamente (**Este paso es imprescindible para el correcto funcionamiento del bot**). Por último, creamos un entorno virtual con las librerías necesarias para el funcionamiento del bot.
 
 Luego se necesita fijar las claves a variables de entorno para poder utilizar el código fuente. Sigue los pasos a continuación:
 
-#### En Windows:
-
 ```bash
-for /f "tokens=1,2 delims== " %G in (keys.json) do setx %G %H
-```
-
-#### En linux:
-
-```bash
-echo 'export $(cat variables.json | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")' >> $HOME/.bashrc
-source $HOME/.bashrc
+setx OPENAI_API_KEY "YOUR_OPENAI_KEY"  # for Linux use export instead of setx
+setx TELEGRAM_TOKEN "YOUR_TELEGRAM_TOKEN"  # for Linux use export instead of setx
 ```
 
 Para obtener las claves de OpenAI y Telegram, sigue las instrucciones en la sección [Obtención de la API de OpenAI](#obtención-de-la-api-de-openai) y [Creación del bot de Telegram y obtención del Token](#creación-del-bot-de-telegram-y-obtención-del-token), respectivamente.
 
 ### Instalar librerías necesarias:
 
-Para que el programa funcione correctamente es necesario instalar las librerías especificadas en el archivo `requirements.txt`. Para ello se puede ejecutar directamente la línea de comando:
+Para que el programa funcione correctamente es necesario instalar las librerías especificadas en el archivo `requirements.yml`. Para ello se puede ejecutar directamente la línea de comando:
 
 ```bash
-pip install -r requirements.txt
+conda create env create -f requirements.yml
 ```
 
-El programa requiere además `FFmpeg` en el sistema para el correcto funcionamiento del reconocimiento de voz a texto y la sintetización de texto a voz, por lo que es necesario instalarlo en caso de que no lo esté
+Una vez finalizado el proceso de instalación, es necesario reiciciar la terminal para que los cambios surtan efecto. Luego abrimos nuevamente y activamos el entorno virtual con el siguiente comando:
 
-#### En Windos:
-
-Descargar el [comprimido](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z). Descomprimir el archivo y copiar al disco `C:`. Renombrar la carpeta con el nombre 'ffmpeg'. Por último, agrega la ruta de la carpeta `bin` a la variable de entorno `PATH`. Se puede hacer mediante línea de comandos ejecutando:
 ```bash
-setx PATH "%PATH%;C:/ffmpeg/bin"
+conda activate chatgpt
 ```
-Cierra la consola y listo!
-
-#### En linux:
-
-Simplemente abre una terminal y ejecuta el comando 
-```bash
-sudo apt install ffmpeg
-```
-listo!
 
 ### Ejecuta el script con:
 
@@ -78,15 +57,16 @@ python main.py
 
 ## Uso
 
-Para utilizar el bot, simplemente abre una conversación con él en Telegram y escribe cualquier consulta. El bot responderá con una respuesta generada por la inteligencia artificial de OpenAI.
+Para utilizar el bot, simplemente abre una conversación con él en Telegram y escribe cualquier consulta. El bot responderá con una respuesta generada por la inteligencia artificial de OpenAI (modelo: `gpt-3.5-turbo`).
 
 El bot cuenta con varios comandos adicionales:
 
 - `/newchat`: inicia una nueva conversación y borra todo el histórico de conversaciones anteriores.
 - `/log`: muestra el historial completo de la conversación actual.
 - `/load`: carga una conversación guardada en un archivo anteriormente.
-- `/rol`: cambia el rol de la conversación a una de las opciones predefinidas (General Assistant, Python Coding, Optical Communication Ing.). Estos roles se pueden cambiar en el archivo `main.py` y fijar tantos como se quieran.
-- `/read`: Si escribe este comando mientras hace Reply a un mensaje el bot generará el audio correspondiente al texto del mensaje replicado.
+- `/rol`: cambia el rol de la conversación a una de las opciones predefinidas (General Assistant, Python Coding, Optical Communication Ing.). Estos roles se pueden cambiar en el archivo `constants.py` y fijar tantos como se quieran.
+- `/read`: genera una nota de voz del texto del mensaje indicado. Se puede utilizar además escribiendo el texto deseado luego del comando (ej: `/read Hola, ¿cómo estás?`).
+- `/write`: realiza la transcripción de una nota de vos previamente seleccionada.
 
 ## Contribución
 
