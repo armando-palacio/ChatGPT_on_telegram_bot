@@ -1,7 +1,0 @@
-{
-    "OPENAI_KEY" : "your_openai_key", 
-    "TELEGRAM_TOKEN" : "your_telegram_token",
-    "SPEECH_KEY" : "your_speech_key",
-    "SPEECH_REGION" : "your_speech_region"
-}
-
